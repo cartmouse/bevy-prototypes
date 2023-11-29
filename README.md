@@ -4,10 +4,6 @@ A repo to house random little prototypes created with the Bevy engine.
 
 # Prototypes
 
-## Conveyor
+## Click and Drag
 
-A 2D conveyor belt.
-
-## Spawner
-
-A 2D item spawner.
+A few draggable 2D sprites.
