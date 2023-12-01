@@ -8,7 +8,6 @@ use bevy::{
 };
 
 // TODO: Handle drag when items are on top of one another
-// TODO: Handle snapping when item is lifted but not removed from target
 
 const SIZE: f32 = 20.0;
 const TARGET_SIZE: f32 = SIZE * 1.5;
@@ -16,56 +15,71 @@ const TARGET_SIZE: f32 = SIZE * 1.5;
 fn main() {
     App::new()
         .add_plugins(
-            DefaultPlugins.set(RenderPlugin {
-                render_creation: WgpuSettings {
-                    backends: Some(Backends::VULKAN),
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "Click and Drag".to_string(),
+                        ..default()
+                    }),
                     ..default()
-                }
-                .into(),
-            }),
+                })
+                .set(RenderPlugin {
+                    render_creation: WgpuSettings {
+                        backends: Some(Backends::VULKAN),
+                        ..default()
+                    }
+                    .into(),
+                }),
         )
         .add_systems(Startup, setup)
         .add_systems(Update, cursor_position)
         .run();
 }
 
-#[derive(Component)]
+#[derive(Component, Debug, Clone)]
 struct Item {
     dragging: bool,
+    id: String,
 }
 
 impl Item {
-    fn new() -> Self {
-        Self { dragging: false }
+    fn new(id: String) -> Self {
+        Self {
+            dragging: false,
+            id,
+        }
     }
 }
 
 #[derive(Component)]
 struct Target {
-    filled: bool,
+    filled: Option<String>,
 }
 
 impl Target {
     fn new() -> Self {
-        Self { filled: false }
+        Self { filled: None }
     }
 }
 
 fn setup(mut commands: Commands) {
     commands.spawn(Camera2dBundle::default());
-    let items = [0.0, 30.0, 60.0, 90.0, 120.0].iter().map(|x| {
-        (
-            Item::new(),
-            SpriteBundle {
-                sprite: Sprite {
-                    custom_size: Some(Vec2::new(SIZE, SIZE)),
+    let items = [0.0, 30.0, 60.0, 90.0, 120.0]
+        .iter()
+        .enumerate()
+        .map(|(i, x)| {
+            (
+                Item::new(i.to_string()),
+                SpriteBundle {
+                    sprite: Sprite {
+                        custom_size: Some(Vec2::new(SIZE, SIZE)),
+                        ..default()
+                    },
+                    transform: Transform::from_translation(Vec3::new(*x, 0.0, 0.0)),
                     ..default()
                 },
-                transform: Transform::from_translation(Vec3::new(*x, 0.0, 0.0)),
-                ..default()
-            },
-        )
-    });
+            )
+        });
     commands.spawn_batch(items);
 
     let targets = [(100.0, 100.0)].iter().map(|coords| {
@@ -116,10 +130,11 @@ fn cursor_position(
                             &item.1.translation,
                             SIZE,
                         ) {
-                            if !target.0.filled {
+                            let id = Some(item.0.id.to_string());
+                            if target.0.filled.is_none() || target.0.filled == id {
                                 item.1.translation =
                                     Vec3::new(target.1.translation.x, target.1.translation.y, 0.0);
-                                target.0.filled = true;
+                                target.0.filled = id;
                             }
                         }
                         item.0.dragging = false;
@@ -136,7 +151,7 @@ fn cursor_position(
                     SIZE,
                 )
             }) {
-                target.0.filled = false;
+                target.0.filled = None;
             }
         });
     }
