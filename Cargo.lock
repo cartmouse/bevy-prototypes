@@ -1348,6 +1348,10 @@ dependencies = [
 [[package]]
 name = "conveyor"
 version = "0.1.0"
+dependencies = [
+ "bevy",
+ "utils",
+]
 
 [[package]]
 name = "core-foundation"
