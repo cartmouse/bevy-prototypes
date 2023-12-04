@@ -3852,3 +3852,10 @@ dependencies = [
  "quote",
  "syn 2.0.39",
 ]
+
+[[package]]
+name = "zoom"
+version = "0.1.0"
+dependencies = [
+ "bevy",
+]
